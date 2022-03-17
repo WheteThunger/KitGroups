@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace Oxide.Plugins
 {
-    [Info("Kit Groups", "WhiteThunder", "1.0.0")]
+    [Info("Kit Groups", "WhiteThunder", "2.0.0")]
     [Description("Adds players to Oxide groups when they redeem Kits.")]
     internal class KitGroups : CovalencePlugin
     {
@@ -64,7 +64,7 @@ namespace Oxide.Plugins
                 return;
             }
 
-            if (kitConfig.DurationMinutes == 0)
+            if (string.IsNullOrWhiteSpace(kitConfig.Duration))
             {
                 if (_pluginConfig.DebugLevel >= 1)
                 {
@@ -76,10 +76,10 @@ namespace Oxide.Plugins
 
             if (_pluginConfig.DebugLevel >= 1)
             {
-                LogWarning($"Adding user {player.UserIDString} to group {kitConfig.Group} for {kitConfig.DurationMinutes} minutes.");
+                LogWarning($"Adding user {player.UserIDString} to group {kitConfig.Group} for {kitConfig.Duration}.");
             }
 
-            AddToGroupTimed(player.UserIDString, kitConfig.Group, kitConfig.DurationMinutes);
+            AddToGroupTimed(player.UserIDString, kitConfig.Group, kitConfig.Duration);
         }
 
         #endregion
@@ -92,7 +92,7 @@ namespace Oxide.Plugins
             return result is bool && (bool)result;
         }
 
-        private void AddToGroupTimed(string userId, string groupName, int durationMinutes)
+        private void AddToGroupTimed(string userId, string groupName, string duration)
         {
             if (TimedPermissions == null)
             {
@@ -100,7 +100,7 @@ namespace Oxide.Plugins
                 return;
             }
 
-            server.Command($"addgroup {userId} {groupName} {durationMinutes}m");
+            server.Command($"addgroup {userId} {groupName} {duration}");
         }
 
         #endregion
@@ -112,8 +112,8 @@ namespace Oxide.Plugins
             [JsonProperty("Group")]
             public string Group;
 
-            [JsonProperty("Duration (minutes)")]
-            public int DurationMinutes;
+            [JsonProperty("Duration")]
+            public string Duration;
         }
 
         private class Configuration : SerializableConfiguration
@@ -143,7 +143,7 @@ namespace Oxide.Plugins
                         continue;
                     }
 
-                    if (kitConfig.DurationMinutes != 0 && timedPermissions == null)
+                    if (kitConfig.Duration != null && timedPermissions == null)
                     {
                         pluginInstance.LogError($"Kit '{kitName}' has duration enabled, but TimedPermissions is not loaded.");
                         continue;
